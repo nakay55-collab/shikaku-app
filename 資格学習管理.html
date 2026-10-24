@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>資格学習管理</title>
+<meta name="theme-color" content="#2f6fd1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="資格学習">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#f4f6f9;--card:#fff;--ink:#1f2933;--sub:#61707f;--line:#dde3ea;
+  --accent:#2f6fd1;--accent-weak:#e8f0fc;
+  --danger:#c93a3a;--danger-weak:#fdecec;
+  --warn:#9a6a12;--warn-weak:#fff6e0;
+  --ok:#2e8b57;--ok-weak:#e6f5ec;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Yu Gothic UI","Meiryo","Hiragino Sans","Noto Sans JP",sans-serif;font-size:15px;line-height:1.6}
+header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hbar{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px 6px}
+.hbar h1{font-size:17px;margin:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--danger-weak);color:var(--danger);border-radius:999px;padding:2px 10px;font-size:13px;font-weight:bold;cursor:pointer;border:none}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--ink)}
+nav.tabs{max-width:1100px;margin:0 auto;display:flex;gap:2px;padding:0 16px}
+nav.tabs button{background:none;border:none;border-bottom:3px solid transparent;padding:8px 12px;font-size:14px;cursor:pointer;color:var(--sub);font-family:inherit}
+nav.tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:bold}
+main{max-width:1100px;margin:0 auto;padding:16px 16px 100px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;min-width:0}
+.grid .card{margin-bottom:0}
+.card h2{font-size:15px;margin:0 0 10px;color:var(--sub);font-weight:bold}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.card-h h2{margin:0}
+.qname{font-size:20px;font-weight:bold;margin-bottom:4px}
+.count{display:flex;align-items:baseline;gap:6px;margin:4px 0}
+.count b{font-size:44px;line-height:1.1}
+.muted{color:var(--sub);font-size:13px}
+.hint{background:var(--accent-weak);border-radius:8px;padding:8px 10px;font-size:13px;margin:10px 0 0}
+.row-sb{display:flex;justify-content:space-between;gap:8px;font-size:13px;flex-wrap:wrap}
+.bar{height:12px;background:#e9edf2;border-radius:999px;overflow:hidden;margin:8px 0 4px}
+.bar>i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.alert{border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;border:2px solid}
+.alert.red{background:var(--danger-weak);border-color:var(--danger);color:#7d1f1f}
+.alert.yellow{background:var(--warn-weak);border-color:#e5b94f;color:#5c430c}
+.alert b{font-size:16px}
+.alert .btn{margin-top:6px}
+.btn{display:inline-block;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+.btn.sub{background:#fff;color:var(--accent)}
+.btn.gray{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn.red{background:#fff;color:var(--danger);border-color:#e7b3b3}
+.btn.big{font-size:17px;padding:10px 22px}
+.btn.sm{font-size:12px;padding:3px 9px}
+.btn:disabled{opacity:.45;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+form .f{display:flex;flex-direction:column;gap:2px;margin-bottom:10px;min-width:0}
+form .f label,.lbl{font-size:13px;color:var(--sub)}
+.frow{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+input,select,textarea{font-family:inherit;font-size:16px;padding:7px 9px;border:1px solid #c7d0da;border-radius:7px;background:#fff;color:var(--ink);width:100%;min-width:0}
+input[type=checkbox]{width:18px;height:18px;flex:none;margin:3px 0 0}
+input[type=color]{padding:2px;height:38px}
+textarea{min-height:70px}
+.tag{display:inline-block;font-size:11px;border-radius:5px;padding:0 6px;margin-left:4px;vertical-align:middle;background:#eef1f5;color:var(--sub);white-space:nowrap}
+.tag.late{background:var(--danger);color:#fff;font-weight:bold}
+.tag.now{background:var(--accent);color:#fff}
+.tag.moved{background:var(--warn-weak);color:var(--warn)}
+.tag.kari{background:var(--warn-weak);color:var(--warn)}
+.tag.done{background:var(--ok-weak);color:var(--ok)}
+.topic{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--line)}
+.topic:last-child{border-bottom:none}
+.topic .tx{flex:1;min-width:0}
+.topic.done .tx>span:first-child{color:var(--sub);text-decoration:line-through}
+.topic.late{background:var(--danger-weak);margin:0 -8px;padding:7px 8px;border-radius:6px}
+.topic .acts{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.wk{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.wk.thisweek{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.wk-h{font-weight:bold;font-size:14px;margin-bottom:2px}
+.wk-h span{font-weight:normal;color:var(--sub);font-size:13px;margin-left:6px}
+.daybars{display:flex;gap:6px;align-items:flex-end;height:110px;margin-top:10px}
+.daybars>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:11px;color:var(--sub)}
+.daybars .b{width:100%;max-width:34px;background:var(--accent);border-radius:4px 4px 0 0;min-height:2px}
+.daybars .today{color:var(--ink);font-weight:bold}
+.timer{font-size:52px;font-weight:bold;font-variant-numeric:tabular-nums;text-align:center;letter-spacing:2px;margin:6px 0 10px}
+.timer.run{color:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--sub);font-weight:normal}
+td.num{text-align:right;white-space:nowrap}
+.tbl-wrap{overflow-x:auto}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.subtabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 14px;cursor:pointer;font-family:inherit;font-size:14px;color:var(--ink)}
+.subtabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ev{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.ev.past{opacity:.5}
+.ev .dt{width:110px;flex:none;font-size:13px;font-weight:bold}
+.ev .bd{flex:1;min-width:0}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+/* ガントチャート */
+.gantt-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.gantt{min-width:820px;font-size:12px}
+.g-row{display:flex;border-bottom:1px solid var(--line);min-height:52px}
+.g-head{min-height:50px}
+.g-label{width:150px;flex:none;padding:6px 8px 6px 0;font-weight:bold;font-size:13px;line-height:1.3}
+.g-track{flex:1;position:relative}
+.g-month{position:absolute;top:0;bottom:0;border-left:1px solid #e6eaef;padding-left:3px;color:var(--sub);white-space:nowrap;font-size:11px}
+.g-month.y{border-left-color:#aab4c0}
+.g-bar{position:absolute;top:8px;height:18px;border-radius:5px;overflow:hidden}
+.g-bar>i{display:block;height:100%}
+.g-today{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--danger);z-index:3}
+.g-head .g-today::after{content:"今日";position:absolute;top:33px;left:3px;color:var(--danger);font-weight:bold;font-size:11px;white-space:nowrap}
+.g-ev{position:absolute;top:31px;height:7px;border-radius:3px;z-index:2}
+.g-ev.apply{background:#e05757}
+.g-ev.course{background:repeating-linear-gradient(45deg,#7a5cc7 0 4px,#c8b9ee 4px 8px)}
+.g-ev.examrange{background:#333}
+.g-ev.other{background:#8a96a3}
+.g-mk{position:absolute;top:2px;transform:translateX(-50%);z-index:4;font-size:16px;line-height:1;cursor:default}
+.g-mk.exam{color:#222;top:6px;font-size:20px}
+.g-mk.dead{color:var(--danger);top:28px;font-size:13px}
+.g-mk.other{color:#556;top:28px;font-size:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.sw{display:inline-block;width:18px;height:7px;border-radius:3px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1}
+.empty{color:var(--sub);font-size:14px;padding:6px 0}
+.placeholder{text-align:center;padding:50px 16px;color:var(--sub)}
+.qcard{border:1px solid var(--line);border-left:5px solid;border-radius:8px;padding:10px 12px;margin-bottom:10px}
+@media(max-width:700px){
+  body{font-size:14px}
+  nav.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:0 0 env(safe-area-inset-bottom);justify-content:space-around;max-width:none;z-index:30}
+  nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;font-size:11px;padding:6px 0 8px;border-bottom:none;border-top:3px solid transparent}
+  nav.tabs button.on{border-top-color:var(--accent)}
+  nav.tabs button .ic{font-size:18px}
+  .count b{font-size:38px}
+  .timer{font-size:42px}
+  .ev .dt{width:84px}
+  .hide-sp{display:none}
+}
+@media(min-width:701px){ nav.tabs .ic{margin-right:4px} .show-sp{display:none} }
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <h1>📘 資格学習管理</h1>
+    <span id="timer-chip"></span>
+    <button class="icon-btn" data-action="tab" data-tab="settings" title="設定・バックアップ">⚙ <span class="hide-sp">設定・バックアップ</span></button>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+<main id="main"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ========== 基本の道具 ========== */
+const STORE_KEY = 'shikaku-gakushu-v1';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const WD = '日月火水木金土';
+function pd(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function fd(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function todayStr(){ return fd(new Date()); }
+function addDays(s, n){ const d = pd(s); d.setDate(d.getDate()+n); return fd(d); }
+function diffDays(a, b){ return Math.round((pd(b) - pd(a)) / 86400000); } // b − a（日）
+function mondayOf(s){ const d = pd(s); d.setDate(d.getDate() - (d.getDay()+6)%7); return fd(d); }
+function md(s){ const d = pd(s); return `${d.getMonth()+1}/${d.getDate()}`; }
+function mdw(s){ return `${md(s)}(${WD[pd(s).getDay()]})`; }
+function jpw(s){ const d = pd(s); return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`; }
+function isHoliday(s){ const g = pd(s).getDay(); return g === 0 || g === 6; }
+function fmtMin(m){ m = Math.round(m); const h = Math.floor(m/60), r = m%60; return h ? (r ? `${h}時間${r}分` : `${h}時間`) : `${r}分`; }
+function fmtH(m){ return (Math.round(m/6)/10).toLocaleString('ja-JP') + '時間'; }
+function pct(a, b){ return b > 0 ? Math.min(100, Math.round(a/b*100)) : 0; }
+function bar(p, color){ return `<div class="bar"><i style="width:${p}%;background:${color||'var(--accent)'}"></i></div>`; }
+// 2027/1/4 や 2027-1-4 を 2027-01-04 にそろえる
+function normDate(s){
+  const m = String(s||'').trim().match(/^(\d{4})[\/\-.年](\d{1,2})[\/\-.月](\d{1,2})日?$/);
+  if (!m) return '';
+  const d = new Date(+m[1], +m[2]-1, +m[3]);
+  return d.getMonth() === +m[2]-1 ? fd(d) : '';
+}
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600); }
+
+/* ========== 初期データ ========== */
+const BOKI_EXAM = '2027-01-10';
+function defaultData(){
+  const quals = [
+    {id:'boki3', name:'簿記3級（CBT）', color:'#2f7dd1', studyStart:'2026-11-02', examDate:BOKI_EXAM, tentative:false, targetHours:100, passed:false,
+     note:'100点満点中70点以上で合格。受験日を予約したら試験日を書きかえてください。',
+     subjects:['簿記の基礎','現金・預金','商品売買','債権・債務','固定資産','給料・税金','純資産','伝票・帳簿','試算表','決算整理','精算表・財務諸表','模擬問題']},
+    {id:'mental2', name:'メンタルヘルス・マネジメントⅡ種', color:'#d0679a', studyStart:'2027-02-01', examDate:'2027-03-21', tentative:false, targetHours:50, passed:false,
+     note:'', subjects:['管理監督者の役割','ストレスの基礎知識','職場環境の改善','労働者への配慮','相談への対応','不調時の対応と復職支援']},
+    {id:'eisei1', name:'第一種衛生管理者', color:'#2e9e6b', studyStart:'2027-03-22', examDate:'2027-06-15', tentative:true, targetHours:100, passed:false,
+     note:'', subjects:['関係法令（有害業務）','労働衛生（有害業務）','関係法令（有害業務以外）','労働衛生（有害業務以外）','労働生理']},
+    {id:'otsu4', name:'危険物取扱者 乙種第4類', color:'#e07b26', studyStart:'2027-06-16', examDate:'2027-09-30', tentative:true, targetHours:60, passed:false,
+     note:'科目ごとに60%以上で合格', subjects:['法令','物理・化学','性質・消火']},
+    {id:'unkou', name:'運行管理者（貨物）', color:'#7a5cc7', studyStart:'2027-10-01', examDate:'2028-03-05', tentative:true, targetHours:100, passed:false,
+     note:'事前に基礎講習を受講', subjects:['貨物自動車運送事業法','道路運送車両法','道路交通法','労働基準法','実務上の知識・能力']},
+  ];
+  const ev = (qualId, type, title, start, end, tentative, memo) => ({id:uid(), qualId, type, title, start, end:end||start, tentative:!!tentative, memo:memo||''});
+  const events = [
+    ev('boki3','締切','CBT受験日の予約','2026-12-13','',true,'第6週のうちに予約する'),
+    ev('mental2','申込期間','受験申込','2027-01-22','2027-02-04',false,''),
+    ev('unkou','講習','基礎講習','2027-11-15','2027-11-17',true,'日程が決まったら書きかえてください'),
+  ];
+  // 簿記3級 学習項目（週ごと）。試験日 2027/1/10 に合わせて10週に組み直した計画
+  const bokiPlan = [
+    [1, [['簿記の基礎（仕訳のルール、勘定科目の5グループ）','簿記の基礎'],['現金・預金','現金・預金']]],
+    [2, [['商品売買（三分法、返品、諸掛り）','商品売買']]],
+    [3, [['売掛金・買掛金','債権・債務'],['クレジット売掛金','債権・債務'],['受取手形・支払手形','債権・債務'],['電子記録債権・債務','債権・債務']]],
+    [4, [['貸付金・借入金','債権・債務'],['未収入金・未払金','債権・債務'],['前払金・前受金','債権・債務'],['仮払金・仮受金','債権・債務'],['立替金・預り金','債権・債務']]],
+    [5, [['有形固定資産','固定資産'],['給料・法定福利費','給料・税金'],['税金（租税公課・消費税・法人税等）','給料・税金']]],
+    [6, [['株式会社の純資産','純資産'],['伝票・証ひょう','伝票・帳簿'],['帳簿と補助簿','伝票・帳簿'],['試算表の作成','試算表'],['CBTの受験日を予約','']]],
+    [7, [['決算整理①（現金過不足、貸倒引当金、減価償却、売上原価の算定）','決算整理']]],
+    [8, [['決算整理②（経過勘定、消耗品・貯蔵品、当座借越、法人税等）＋年末年始は復習中心','決算整理']]],
+    [9, [['精算表','精算表・財務諸表'],['財務諸表（損益計算書・貸借対照表）','精算表・財務諸表']]],
+    [10,[['本試験形式の模擬問題（第1問 仕訳／第2問 帳簿・勘定記入／第3問 決算）を通しで解く','模擬問題'],['弱点補強','模擬問題'],['模擬問題を時間（60分）を計って2回以上','模擬問題']]],
+  ];
+  const topics = [];
+  bokiPlan.forEach(([w, items]) => {
+    const s = addDays('2026-11-02', (w-1)*7), e = [addDays(s, 6), addDays(BOKI_EXAM, -1)].sort()[0];
+    items.forEach(([text, subject], i) => topics.push({id:uid(), qualId:'boki3', week:w, order:i, planStart:s, planEnd:e, start:s, end:e, text, subject, done:false, doneDate:'', moved:false}));
+  });
+  return {
+    version:1, quals, events, topics, logs:[], questions:[], answers:[],
+    settings:{weekdayMin:45, holidayMin:120, weeklyTargetMin:480, currentQualId:'', lastBackup:''},
+    timer:{running:false, startedAt:0, accMs:0, qualId:'', subject:''},
+  };
+}
+
+/* ========== 保存と読み込み ========== */
+let storageOK = true;
+let S = load();
+function load(){
+  let raw = null;
+  try { raw = localStorage.getItem(STORE_KEY); } catch(e){ storageOK = false; }
+  if (!raw) return defaultData();
+  try { return normalize(JSON.parse(raw)); } catch(e){ return defaultData(); }
+}
+function normalize(d){
+  const def = defaultData();
+  const out = Object.assign({}, def, d);
+  out.settings = Object.assign({}, def.settings, d.settings || {});
+  out.timer = Object.assign({}, def.timer, d.timer || {});
+  ['quals','events','topics','logs','questions','answers'].forEach(k => { if (!Array.isArray(out[k])) out[k] = def[k]; });
+  return out;
+}
+function save(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); storageOK = true; }
+  catch(e){ storageOK = false; toast('保存できませんでした。ブラウザの設定を確認してください'); }
+}
+
+/* ========== データの計算 ========== */
+const qual = id => S.quals.find(q => q.id === id);
+const qualName = id => (qual(id) || {}).name || '（全体）';
+const qualColor = id => (qual(id) || {}).color || '#8a96a3';
+const sumMin = f => S.logs.filter(f).reduce((a, l) => a + Number(l.minutes || 0), 0);
+const qualMin = id => sumMin(l => l.qualId === id);
+function currentQual(){
+  const sel = qual(S.settings.currentQualId);
+  if (sel && !sel.passed) return sel;
+  const t = todayStr();
+  return S.quals.filter(q => !q.passed && q.examDate >= t).sort((a, b) => a.examDate < b.examDate ? -1 : 1)[0] || null;
+}
+function topicStatus(tp){
+  const t = todayStr();
+  if (tp.done) return 'done';
+  if (tp.end < t) return 'late';
+  if (tp.start <= t) return 'now';
+  return 'future';
+}
+// 学習項目の第1週の開始日（登録済みの第1週、なければ学習開始日の週の月曜日）
+function weekBase(qid){
+  const w1 = S.topics.filter(x => x.qualId === qid && x.week === 1).map(x => x.planStart).sort()[0];
+  const q = qual(qid);
+  return w1 || mondayOf(q ? q.studyStart : todayStr());
+}
+function weekOf(qid, start){ return Math.max(1, Math.floor(diffDays(weekBase(qid), start) / 7) + 1); }
+function sortTopics(a, b){ return a.start < b.start ? -1 : a.start > b.start ? 1 : (a.week - b.week) || (a.order - b.order); }
+function dailyGoal(s){ return isHoliday(s) ? S.settings.holidayMin : S.settings.weekdayMin; }
+function deadlineAlerts(){
+  const t = todayStr();
+  return S.events.filter(e => (e.type === '申込期間' || e.type === '締切') && e.end >= t && diffDays(t, e.end) <= 30)
+    .sort((a, b) => a.end < b.end ? -1 : 1);
+}
+function timerElapsed(){ const tm = S.timer; return (tm.accMs || 0) + (tm.running ? Date.now() - tm.startedAt : 0); }
+function fmtClock(ms){
+  const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`;
+}
+
+/* ========== 簿記3級の計画の詰め直し（12週 → 試験日 1/10 までの10週） ========== */
+const BOKI_REMAP = {1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:6, 8:7, 9:8, 10:9, 11:10, 12:10};
+function needsBokiReplan(){ return !S.settings.bokiReplanned && S.topics.some(t => t.qualId === 'boki3' && t.week === 12); }
+function bokiReplanBanner(){
+  if (!needsBokiReplan()) return '';
+  return `<div class="alert yellow">📅 <b>簿記3級の計画を、試験日 2027/1/10 に合わせて詰め直せます</b><br>
+    12週分の学習項目を 11/2〜1/9 の10週に組み直します（第6週に「純資産・伝票・帳簿」と「試算表」、最終週に「模擬問題」と「弱点補強」をまとめます）。<br>
+    <button class="btn" data-action="bokiReplan">計画を詰め直す</button></div>`;
+}
+function bokiReplan(){
+  const base = weekBase('boki3');
+  const list = S.topics.filter(t => t.qualId === 'boki3').sort((a, b) => (a.week - b.week) || (a.order - b.order));
+  const order = {};
+  list.forEach(t => {
+    const nw = /予約/.test(t.text) ? 6 : (BOKI_REMAP[t.week] || Math.max(1, t.week - 2));
+    const ps = addDays(base, (nw-1)*7);
+    let pe = [addDays(ps, 6), addDays(BOKI_EXAM, -1)].sort()[0];
+    if (pe < ps) pe = addDays(ps, 6);
+    order[nw] = (order[nw] || 0);
+    Object.assign(t, {week:nw, order:order[nw]++, planStart:ps, planEnd:pe, start:ps, end:pe, moved:false});
+  });
+  S.events.forEach(e => { if (e.qualId === 'boki3' && e.type === '締切' && /予約/.test(e.title)){ e.start = e.end = '2026-12-13'; e.memo = '第6週のうちに予約する'; } });
+  S.events = S.events.filter(e => !(e.qualId === 'boki3' && e.type === '受験期間'));
+  const q = qual('boki3'); if (q) q.examDate = BOKI_EXAM;
+  S.settings.bokiReplanned = true;
+}
+
+/* ========== 画面の状態 ========== */
+const UI = { tab:'home', schedSub:'road', topicQual:'', logFilter:'', logLimit:30, editLogId:'', logDraft:null, editEventId:'', editTopicId:'', editQualId:'' };
+const TABS = [['home','🏠','ホーム'],['record','✏️','学習記録'],['schedule','📅','スケジュール'],['quiz','📝','問題演習'],['review','📊','振り返り']];
+
+function render(){
+  $('#tabs').innerHTML = TABS.map(([id, ic, label]) => `<button class="${UI.tab===id?'on':''}" data-action="tab" data-tab="${id}"><span class="ic">${ic}</span>${label}</button>`).join('');
+  const views = {home:viewHome, record:viewRecord, schedule:viewSchedule, quiz:viewQuiz, review:viewReview, settings:viewSettings};
+  $('#main').innerHTML = (storageOK ? '' : `<div class="alert red"><b>データを保存できません。</b><br>ブラウザの設定（Cookieとサイトデータ）で保存が禁止されている可能性があります。</div>`) + views[UI.tab]();
+  renderTimerChip();
+  if (UI.tab === 'record') syncSubjectList();
+}
+function renderTimerChip(){
+  const tm = S.timer, el = $('#timer-chip');
+  if (tm.running || tm.accMs > 0){
+    el.innerHTML = `<button class="chip" data-action="tab" data-tab="record">⏱ <span id="chip-time">${fmtClock(timerElapsed())}</span>${tm.running ? '' : '（一時停止中）'}</button>`;
+  } else el.innerHTML = '';
+}
+
+/* ========== 共通パーツ ========== */
+function qualOptions(sel, withAll){
+  return (withAll ? `<option value="">${withAll}</option>` : '') +
+    S.quals.map(q => `<option value="${q.id}" ${q.id===sel?'selected':''}>${esc(q.name)}${q.passed?'（合格済み）':''}</option>`).join('');
+}
+function topicItem(tp, opt = {}){
+  const st = topicStatus(tp);
+  const q = qual(tp.qualId);
+  let tags = '';
+  if (opt.showQual && q) tags += `<span class="tag" style="background:${q.color}22;color:${q.color}">${esc(q.name)}</span>`;
+  if (tp.subject) tags += `<span class="tag">${esc(tp.subject)}</span>`;
+  if (st === 'late') tags += `<span class="tag late">遅れ</span>`;
+  if (st === 'done') tags += `<span class="tag done">完了 ${tp.doneDate ? md(tp.doneDate) : ''}</span>`;
+  if (tp.moved) tags += `<span class="tag moved">${md(tp.start)}〜${md(tp.end)} に振替</span>`;
+  if (opt.showWeek) tags += `<span class="tag">第${tp.week}週</span>`;
+  let acts = '';
+  if (st === 'late'){
+    acts += `<span class="muted">予定（${md(tp.end)}まで）を過ぎています →</span>
+      <button class="btn sm" data-action="moveTopic" data-id="${tp.id}" data-to="this">今週に振り替え</button>
+      <button class="btn sm sub" data-action="moveTopic" data-id="${tp.id}" data-to="next">来週に振り替え</button>`;
+  }
+  if (opt.editable){
+    acts += `<button class="btn sm gray" data-action="editTopic" data-id="${tp.id}">編集</button>
+      <button class="btn sm red" data-action="delTopic" data-id="${tp.id}">削除</button>`;
+  }
+  return `<div class="topic ${st}">
+    <input type="checkbox" data-change="toggleTopic" data-id="${tp.id}" ${tp.done?'checked':''} aria-label="完了">
+    <div class="tx"><span>${esc(tp.text)}</span> ${tags}${acts ? `<div class="acts">${acts}</div>` : ''}</div>
+  </div>`;
+}
+
+/* ========== ホーム ========== */
+function viewHome(){
+  const t = todayStr(), q = currentQual();
+  let h = '';
+  deadlineAlerts().forEach(e => {
+    const left = diffDays(t, e.end);
+    const span = e.start !== e.end ? `（${mdw(e.start)}〜${mdw(e.end)}）` : '';
+    const open = e.type === '申込期間' && e.start > t ? `<br>申込開始は ${jpw(e.start)} からです。` : '';
+    h += `<div class="alert red">⚠ <b>${left === 0 ? '今日が締切です！' : `締切まであと ${left} 日`}</b>　${esc(qualName(e.qualId))}：${esc(e.title)}${span}${e.tentative?' <span class="tag kari">仮</span>':''}<br>締切日：${jpw(e.end)}${open}</div>`;
+  });
+  h += bokiReplanBanner();
+  const hasData = S.logs.length > 0 || S.topics.some(x => x.done);
+  if (hasData && (!S.settings.lastBackup || diffDays(S.settings.lastBackup, t) >= 7)){
+    h += `<div class="alert yellow">💾 <b>バックアップをおすすめします</b>（${S.settings.lastBackup ? `前回：${jpw(S.settings.lastBackup)}` : 'まだ一度も取っていません'}）<br>
+      データはこのパソコンのこのブラウザにだけ保存されています。<br><button class="btn sub" data-action="backup">いますぐバックアップ</button></div>`;
+  }
+
+  h += '<div class="grid">';
+  // 今取り組んでいる資格
+  if (q){
+    const left = diffDays(t, q.examDate), tot = qualMin(q.id), p = pct(tot, q.targetHours*60);
+    const remain = Math.max(0, q.targetHours*60 - tot);
+    const pace = left > 0 ? Math.ceil(remain / left) : 0;
+    h += `<section class="card" style="border-top:5px solid ${q.color}">
+      <div class="card-h"><h2>今取り組んでいる資格</h2>
+        <select data-change="setCurrent" style="width:auto;font-size:13px;padding:3px 6px">
+          <option value="">自動（試験日が近い順）</option>${S.quals.filter(x=>!x.passed).map(x=>`<option value="${x.id}" ${S.settings.currentQualId===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}
+        </select></div>
+      <div class="qname">${esc(q.name)}</div>
+      <div class="count"><span>試験日まで あと</span><b>${left}</b><span>日</span></div>
+      <div class="muted">試験日：${jpw(q.examDate)}${q.tentative?' <span class="tag kari">仮</span>':''} <button class="btn sm gray" data-action="editExam" data-id="${q.id}">試験日を変更</button></div>
+      ${bar(p, q.color)}
+      <div class="row-sb"><span>累計 ${fmtH(tot)} ／ 目標 ${q.targetHours}時間</span><b>${p}%</b></div>
+      ${remain > 0 && left > 0 ? `<p class="hint">目標時間に届くには、今日から試験日まで <b>1日あたり約${pace}分</b> が目安です。</p>` : remain <= 0 ? `<p class="hint">🎉 目標時間を達成しました！</p>` : ''}
+    </section>`;
+  } else {
+    h += `<section class="card"><h2>今取り組んでいる資格</h2><p class="empty">試験日が先の資格がありません。「スケジュール」→「資格の設定」で試験日を登録してください。</p></section>`;
+  }
+
+  // 今日の学習
+  const goal = dailyGoal(t), done = sumMin(l => l.date === t);
+  const cand = S.topics.filter(x => !x.done && (topicStatus(x) === 'late' || topicStatus(x) === 'now')).sort(sortTopics);
+  const nextUp = cand[0] || S.topics.filter(x => !x.done).sort(sortTopics)[0];
+  h += `<section class="card">
+    <h2>今日の学習（${mdw(t)}・${isHoliday(t)?'休日':'平日'}）</h2>
+    <div class="count"><b>${done}</b><span>分 ／ 目標 ${goal}分</span></div>
+    ${bar(pct(done, goal), done >= goal ? 'var(--ok)' : 'var(--accent)')}
+    <div class="row-sb"><span>${done >= goal ? '✅ 今日の目標を達成しました' : `あと ${goal - done}分`}</span></div>
+    ${nextUp ? `<p class="hint">今日のおすすめ：<b>${esc(nextUp.text)}</b>${nextUp.start > t ? `（${md(nextUp.start)}から開始の予定）` : ''}</p>` : ''}
+    <div class="btns" style="margin-top:12px"><button class="btn big" data-action="quickTimer">▶ タイマーで学習を始める</button>
+      <button class="btn sub" data-action="tab" data-tab="record">手入力で記録</button></div>
+  </section>`;
+
+  // 今週の学習時間
+  const mon = mondayOf(t);
+  const days = [...Array(7)].map((_, i) => { const d = addDays(mon, i); return {d, m: sumMin(l => l.date === d)}; });
+  const wk = days.reduce((a, x) => a + x.m, 0);
+  const maxM = Math.max(S.settings.holidayMin, ...days.map(x => x.m), 1);
+  h += `<section class="card">
+    <h2>今週の学習時間（${md(mon)}〜${md(addDays(mon,6))}）</h2>
+    <div class="count"><b>${fmtH(wk).replace('時間','')}</b><span>時間 ／ 目標 ${fmtH(S.settings.weeklyTargetMin)}</span></div>
+    ${bar(pct(wk, S.settings.weeklyTargetMin), wk >= S.settings.weeklyTargetMin ? 'var(--ok)' : 'var(--accent)')}
+    <div class="daybars">${days.map(x => `<div class="${x.d===t?'today':''}" title="${mdw(x.d)} ${x.m}分">
+      <span>${x.m||''}</span><div class="b" style="height:${Math.round(x.m/maxM*75)}%;${x.d>t?'opacity:.3':''}"></div><span>${WD[pd(x.d).getDay()]}</span></div>`).join('')}</div>
+  </section>`;
+
+  // 今週やる項目
+  const late = S.topics.filter(x => topicStatus(x) === 'late').sort(sortTopics);
+  const nowT = S.topics.filter(x => x.start <= t && x.end >= t).sort(sortTopics);
+  let body = '';
+  if (late.length){
+    body += `<div class="alert red" style="padding:8px 10px;margin-bottom:8px"><b>予定より遅れている項目が ${late.length} 件あります。</b><br>今週か来週に振り替えて、無理のないペースに組み直しましょう。
+      <div class="btns" style="margin-top:6px"><button class="btn sm" data-action="moveAllLate" data-to="this">遅れをすべて今週に振り替え</button>
+      <button class="btn sm sub" data-action="moveAllLate" data-to="next">遅れをすべて来週に振り替え</button></div></div>`;
+    body += late.map(x => topicItem(x, {showQual:true, showWeek:true})).join('');
+  }
+  if (nowT.length){
+    body += nowT.map(x => topicItem(x, {showQual:true})).join('');
+  } else if (!late.length){
+    const fut = S.topics.filter(x => !x.done && x.start > t).sort(sortTopics);
+    if (fut.length){
+      const s0 = fut[0].start;
+      body += `<p class="muted">今週の項目はありません。次は <b>${mdw(s0)}</b> からです。</p>` + fut.filter(x => x.start === s0).map(x => topicItem(x, {showQual:true})).join('');
+    } else body += `<p class="empty">登録されている学習項目はありません。</p>`;
+  }
+  const wkDone = nowT.filter(x => x.done).length;
+  h += `<section class="card">
+    <div class="card-h"><h2>今週やる項目</h2>${nowT.length ? `<span class="muted">完了 ${wkDone} ／ ${nowT.length}</span>` : ''}</div>
+    ${body}
+    <div style="margin-top:8px"><button class="btn sm gray" data-action="gotoTopics">学習項目の一覧を見る</button></div>
+  </section>`;
+
+  // これからの予定
+  const ups = [
+    ...S.events.filter(e => e.end >= t).map(e => ({date:e.start <= t ? e.end : e.start, label:`${e.type}：${e.title}`, range:e.start!==e.end ? `${md(e.start)}〜${md(e.end)}` : '', qualId:e.qualId, tentative:e.tentative})),
+    ...S.quals.filter(q => !q.passed && q.examDate >= t).map(q => ({date:q.examDate, label:'試験日', range:'', qualId:q.id, tentative:q.tentative})),
+  ].sort((a, b) => a.date < b.date ? -1 : 1).slice(0, 6);
+  h += `<section class="card"><h2>これからの予定</h2>
+    ${ups.length ? ups.map(u => `<div class="ev"><div class="dt">${mdw(u.date)}<br><span class="muted">あと${diffDays(t,u.date)}日</span></div>
+      <div class="bd"><span class="dot" style="background:${qualColor(u.qualId)}"></span>${esc(qualName(u.qualId))}<br><b>${esc(u.label)}</b> ${u.range?`<span class="muted">${u.range}</span>`:''}${u.tentative?'<span class="tag kari">仮</span>':''}</div></div>`).join('') : '<p class="empty">予定はありません。</p>'}
+  </section>`;
+  h += '</div>';
+  return h;
+}
+
+/* ========== 学習記録 ========== */
+function viewRecord(){
+  const tm = S.timer;
+  const cq = currentQual() || S.quals[0] || {id:''};
+  if (!tm.qualId) tm.qualId = cq.id;
+  const editing = UI.editLogId ? S.logs.find(l => l.id === UI.editLogId) : null;
+  const f = editing || UI.logDraft || {date:todayStr(), qualId:cq.id, subject:'', minutes:'', memo:''};
+  const el = timerElapsed();
+  let h = '<div class="grid">';
+  // タイマー
+  h += `<section class="card">
+    <h2>⏱ タイマー</h2>
+    <div class="frow">
+      <div class="f"><span class="lbl">資格</span><select data-change="timerQual">${qualOptions(tm.qualId)}</select></div>
+      <div class="f"><span class="lbl">科目</span><input data-change="timerSubject" list="subj-timer" value="${esc(tm.subject)}" placeholder="選ぶか入力"><datalist id="subj-timer">${((qual(tm.qualId)||{}).subjects||[]).map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
+    </div>
+    <div class="timer ${tm.running?'run':''}" id="timer-display">${fmtClock(el)}</div>
+    <div class="btns" style="justify-content:center">
+      ${tm.running ? `<button class="btn big gray" data-action="timerPause">⏸ 一時停止</button>`
+        : `<button class="btn big" data-action="timerStart">▶ ${el > 0 ? '再開' : '開始'}</button>`}
+      <button class="btn big red" data-action="timerStop" ${el > 0 ? '' : 'disabled'}>■ 停止して記録</button>
+      ${el > 0 && !tm.running ? `<button class="btn sm gray" data-action="timerReset">リセット</button>` : ''}
+    </div>
+    <p class="muted" style="text-align:center;margin:8px 0 0">画面を閉じても、計測は続きます。「停止して記録」を押すと、記録欄に時間が入ります。</p>
+  </section>`;
+  // 記録フォーム
+  h += `<section class="card" id="log-form-card">
+    <h2>${editing ? '✏️ 記録を編集' : '✏️ 学習を記録する'}</h2>
+    <form data-form="log">
+      <div class="frow">
+        <div class="f"><label>日付</label><input type="date" name="date" value="${esc(f.date)}" required></div>
+        <div class="f"><label>時間（分）</label><input type="number" name="minutes" min="1" max="1440" inputmode="numeric" value="${esc(f.minutes)}" required></div>
+      </div>
+      <div class="f"><label>資格</label><select name="qualId" data-change="logQual">${qualOptions(f.qualId)}</select></div>
+      <div class="f"><label>科目</label><input name="subject" list="subj-log" value="${esc(f.subject)}" placeholder="選ぶか入力"><datalist id="subj-log"></datalist></div>
+      <div class="f"><label>メモ（任意）</label><textarea name="memo" placeholder="例：仕訳の練習問題 20問">${esc(f.memo)}</textarea></div>
+      <div class="btns"><button class="btn" type="submit">${editing ? '変更を保存' : '記録する'}</button>
+        ${editing || UI.logDraft ? `<button class="btn gray" type="button" data-action="cancelLog">やめる</button>` : ''}</div>
+    </form>
+  </section>`;
+  // 進捗
+  h += `<section class="card"><h2>資格ごとの累計時間と達成率</h2>
+    ${S.quals.map(q => { const m = qualMin(q.id), p = pct(m, q.targetHours*60);
+      return `<div style="margin-bottom:12px"><div class="row-sb"><b><span class="dot" style="background:${q.color}"></span>${esc(q.name)}${q.passed?'<span class="tag done">合格済み</span>':''}</b><span>${fmtH(m)} ／ ${q.targetHours}時間（${p}%）</span></div>${bar(p, q.color)}</div>`; }).join('')}
+  </section>`;
+  h += '</div>';
+  // 一覧
+  const list = S.logs.filter(l => !UI.logFilter || l.qualId === UI.logFilter).sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.created||0) - (a.created||0));
+  h += `<section class="card" style="margin-top:14px">
+    <div class="card-h"><h2>記録の一覧（${list.length}件・合計 ${fmtH(list.reduce((a,l)=>a+Number(l.minutes),0))}）</h2>
+      <select data-change="logFilter" style="width:auto">${qualOptions(UI.logFilter, 'すべての資格')}</select></div>
+    ${list.length ? `<div class="tbl-wrap"><table><thead><tr><th>日付</th><th>資格・科目</th><th class="num">時間</th><th class="hide-sp">メモ</th><th></th></tr></thead><tbody>
+      ${list.slice(0, UI.logLimit).map(l => `<tr><td style="white-space:nowrap">${mdw(l.date)}<br><span class="muted">${pd(l.date).getFullYear()}</span></td>
+        <td><span class="dot" style="background:${qualColor(l.qualId)}"></span>${esc(qualName(l.qualId))}<br><span class="muted">${esc(l.subject)}</span>${l.memo ? `<div class="show-sp muted">📝 ${esc(l.memo)}</div>` : ''}</td>
+        <td class="num">${l.minutes}分</td><td class="hide-sp">${esc(l.memo)}</td>
+        <td style="white-space:nowrap"><button class="btn sm gray" data-action="editLog" data-id="${l.id}">編集</button> <button class="btn sm red" data-action="delLog" data-id="${l.id}">削除</button></td></tr>`).join('')}
+      </tbody></table></div>
+      ${list.length > UI.logLimit ? `<div style="text-align:center;margin-top:8px"><button class="btn gray" data-action="moreLogs">さらに表示</button></div>` : ''}`
+      : '<p class="empty">まだ記録がありません。タイマーを使うか、上の欄から記録してください。</p>'}
+  </section>`;
+  return h;
+}
+function syncSubjectList(){
+  const sel = document.querySelector('form[data-form="log"] select[name="qualId"]');
+  const dl = $('#subj-log');
+  if (sel && dl) dl.innerHTML = ((qual(sel.value)||{}).subjects||[]).map(s => `<option value="${esc(s)}">`).join('');
+}
+
+/* ========== スケジュール ========== */
+function viewSchedule(){
+  const subs = [['road','ロードマップ'],['topics','学習項目'],['events','予定・イベント'],['quals','資格の設定']];
+  const body = {road:viewRoad, topics:viewTopics, events:viewEvents, quals:viewQuals}[UI.schedSub]();
+  return `<div class="subtabs">${subs.map(([id, l]) => `<button class="${UI.schedSub===id?'on':''}" data-action="schedSub" data-sub="${id}">${l}</button>`).join('')}</div>` + body;
+}
+function viewRoad(){
+  const t = todayStr();
+  const ds = [t];
+  S.quals.forEach(q => ds.push(q.studyStart, q.examDate));
+  S.events.forEach(e => ds.push(e.start, e.end));
+  const v = ds.filter(Boolean).sort();
+  const s0 = pd(v[0]), e0 = pd(v[v.length-1]);
+  const rs = fd(new Date(s0.getFullYear(), s0.getMonth(), 1));
+  const re = fd(new Date(e0.getFullYear(), e0.getMonth()+1, 1));
+  const D = diffDays(rs, re);
+  const x = d => Math.max(0, Math.min(100, diffDays(rs, d) / D * 100));
+  let months = '';
+  for (let d = pd(rs); fd(d) < re; d = new Date(d.getFullYear(), d.getMonth()+1, 1)){
+    const s = fd(d), first = s === rs || d.getMonth() === 0;
+    months += `<div class="g-month ${d.getMonth()===0?'y':''}" style="left:${x(s)}%">${first ? `${d.getFullYear()}年<br>` : '<br>'}${d.getMonth()+1}月</div>`;
+  }
+  const todayLine = `<div class="g-today" style="left:${x(t)}%"></div>`;
+  const evHtml = e => {
+    const tip = esc(`${e.type}：${e.title}　${jpw(e.start)}${e.end!==e.start?'〜'+jpw(e.end):''}${e.tentative?'（仮）':''}`);
+    if (e.type === '締切') return `<div class="g-mk dead" style="left:${x(e.start)}%" title="${tip}">▼</div>`;
+    const cls = {申込期間:'apply', 講習:'course', 受験期間:'examrange'}[e.type];
+    if (cls) return `<div class="g-ev ${cls}" style="left:${x(e.start)}%;width:${Math.max(0.5, x(addDays(e.end,1)) - x(e.start))}%" title="${tip}"></div>`;
+    return `<div class="g-mk other" style="left:${x(e.start)}%" title="${tip}">●</div>`;
+  };
+  let rows = S.quals.map(q => {
+    const p = pct(qualMin(q.id), q.targetHours*60);
+    const tip = esc(`${q.name}　学習 ${jpw(q.studyStart)}〜 試験 ${jpw(q.examDate)}${q.tentative?'（仮）':''}　達成率 ${p}%`);
+    return `<div class="g-row"><div class="g-label"><span class="dot" style="background:${q.color}"></span>${esc(q.name)}<br><span class="muted" style="font-weight:normal">試験 ${md(q.examDate)}${q.tentative?'（仮）':''}</span></div>
+      <div class="g-track">${todayLine}
+        <div class="g-bar" style="left:${x(q.studyStart)}%;width:${Math.max(0.5, x(q.examDate) - x(q.studyStart))}%;background:${q.color}44" title="${tip}"><i style="width:${p}%;background:${q.color}"></i></div>
+        <div class="g-mk exam" style="left:${x(q.examDate)}%" title="${tip}">◆</div>
+        ${S.events.filter(e => e.qualId === q.id).map(evHtml).join('')}
+      </div></div>`;
+  }).join('');
+  const common = S.events.filter(e => !qual(e.qualId));
+  if (common.length) rows += `<div class="g-row"><div class="g-label">全体</div><div class="g-track">${todayLine}${common.map(evHtml).join('')}</div></div>`;
+  return `<section class="card"><h2>2年間のロードマップ</h2>
+    <div class="gantt-wrap"><div class="gantt">
+      <div class="g-row g-head"><div class="g-label"></div><div class="g-track">${months}${todayLine}</div></div>
+      ${rows}
+    </div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:#2f7dd1"></i>学習期間（濃い部分＝達成率）</span>
+      <span>◆ 試験日</span>
+      <span><i class="sw" style="background:#e05757"></i>申込期間</span>
+      <span style="color:var(--danger)">▼ 締切</span>
+      <span><i class="sw" style="background:repeating-linear-gradient(45deg,#7a5cc7 0 4px,#c8b9ee 4px 8px)"></i>講習</span>
+      <span><i class="sw" style="background:#333"></i>受験期間</span>
+      <span style="color:var(--danger)">｜ 今日</span>
+    </div>
+    <p class="muted">スマホでは横にスクロールできます。マークにマウスを乗せると詳しい日付が出ます。日付の変更は「資格の設定」「予定・イベント」から行えます。</p>
+  </section>`;
+}
+function viewTopics(){
+  const t = todayStr();
+  const qid = UI.topicQual || (currentQual() || S.quals[0] || {}).id;
+  const list = S.topics.filter(x => x.qualId === qid).sort((a, b) => (a.week - b.week) || (a.order - b.order));
+  const weeks = [...new Set(list.map(x => x.week))];
+  const doneN = list.filter(x => x.done).length, lateN = list.filter(x => topicStatus(x) === 'late').length;
+  let h = `<section class="card">
+    <div class="card-h"><h2>学習項目のチェックリスト</h2><select data-change="topicQual" style="width:auto">${qualOptions(qid)}</select></div>
+    ${qid === 'boki3' ? bokiReplanBanner() : ''}
+    ${list.length ? `<div class="row-sb"><span>完了 ${doneN} ／ ${list.length} 項目${lateN ? `　<span class="tag late">遅れ ${lateN}件</span>` : ''}</span><b>${pct(doneN, list.length)}%</b></div>${bar(pct(doneN, list.length), qualColor(qid))}` : ''}
+  </section>`;
+  if (!list.length) h += `<section class="card"><p class="empty">この資格の学習項目はまだありません。下の「学習項目を追加」から登録できます。</p></section>`;
+  weeks.forEach(w => {
+    const items = list.filter(x => x.week === w);
+    const ps = items[0].planStart, pe = items[0].planEnd;
+    const thisWeek = ps <= t && t <= pe;
+    h += `<div class="wk card ${thisWeek?'thisweek':''}" style="margin-bottom:10px">
+      <div class="wk-h">第${w}週<span>${mdw(ps)}〜${mdw(pe)}</span>${thisWeek?'<span class="tag now">今週</span>':''}${items.every(x=>x.done)?'<span class="tag done">完了</span>':''}</div>
+      ${items.map(x => UI.editTopicId === x.id ? topicForm(x) : topicItem(x, {editable:true})).join('')}
+    </div>`;
+  });
+  const last = list[list.length-1];
+  const nw = last ? Math.max(...list.map(x => x.week)) + 1 : 1;
+  const ns = last ? addDays(list.reduce((a, x) => x.planEnd > a ? x.planEnd : a, ''), 1) : mondayOf(t);
+  h += `<section class="card"><h2>＋ 学習項目を追加（${esc(qualName(qid))}）</h2>
+    ${UI.editTopicId ? '' : topicForm({qualId:qid, week:nw, planStart:ns, planEnd:addDays(ns, 6), text:'', subject:''})}
+  </section>
+  <section class="card"><h2>まとめて追加（他の資格の計画を入れるとき）</h2>
+    <p class="muted" style="margin-top:0">1行に1項目ずつ、<b>週,開始日,終了日,学習項目,科目</b> の順にカンマで区切って書きます（科目は省略できます）。<br>
+    例：<code>1,2027/2/1,2027/2/7,管理監督者の役割と法令,管理監督者の役割</code></p>
+    <form data-form="bulkTopics"><input type="hidden" name="qualId" value="${esc(qid)}">
+      <div class="f"><textarea name="lines" rows="5" placeholder="1,2027/2/1,2027/2/7,学習項目の内容,科目"></textarea></div>
+      <button class="btn" type="submit">「${esc(qualName(qid))}」に追加する</button>
+    </form>
+  </section>`;
+  return h;
+}
+function topicForm(x){
+  const subs = (qual(x.qualId) || {}).subjects || [];
+  return `<form data-form="topic" class="wk" style="background:#fafbfd">
+    <input type="hidden" name="id" value="${esc(x.id||'')}"><input type="hidden" name="qualId" value="${esc(x.qualId)}">
+    <div class="frow">
+      <div class="f"><label>週（開始日から自動）</label><input type="number" name="week" min="1" value="${esc(x.week)}" required></div>
+      <div class="f"><label>開始日</label><input type="date" name="start" value="${esc(x.planStart)}" data-change="topicStart" required></div>
+      <div class="f"><label>終了日</label><input type="date" name="end" value="${esc(x.planEnd)}" required></div>
+    </div>
+    <div class="f"><label>学習項目</label><input name="text" value="${esc(x.text)}" required></div>
+    <div class="f"><label>科目（任意）</label><input name="subject" list="subj-topic-${esc(x.qualId)}" value="${esc(x.subject)}"><datalist id="subj-topic-${esc(x.qualId)}">${subs.map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
+    <div class="btns"><button class="btn" type="submit">${x.id ? '変更を保存' : '追加する'}</button>${x.id ? `<button class="btn gray" type="button" data-action="cancelTopic">やめる</button>` : ''}</div>
+    ${x.id && x.moved ? '<p class="muted" style="margin-bottom:0">※保存すると、振り替えた日付はここで入力した日付に置きかわります。</p>' : ''}
+  </form>`;
+}
+function viewEvents(){
+  const t = todayStr();
+  const ed = UI.editEventId ? S.events.find(e => e.id === UI.editEventId) : null;
+  const f = ed || {qualId:(currentQual()||{}).id||'', type:'申込期間', title:'', start:t, end:'', tentative:false, memo:''};
+  const types = ['申込期間','締切','講習','受験期間','その他'];
+  const list = [...S.events].sort((a, b) => a.start < b.start ? -1 : 1);
+  return `<div class="grid">
+  <section class="card" id="event-form-card"><h2>${ed ? '予定を編集' : '＋ 予定を登録'}</h2>
+    <form data-form="event"><input type="hidden" name="id" value="${esc(f.id||'')}">
+      <div class="frow">
+        <div class="f"><label>資格</label><select name="qualId">${qualOptions(f.qualId, '（全体）')}</select></div>
+        <div class="f"><label>種類</label><select name="type">${types.map(x=>`<option ${x===f.type?'selected':''}>${x}</option>`).join('')}</select></div>
+      </div>
+      <div class="f"><label>名前</label><input name="title" value="${esc(f.title)}" placeholder="例：受験申込、基礎講習" required></div>
+      <div class="frow">
+        <div class="f"><label>開始日（1日だけなら この日）</label><input type="date" name="start" value="${esc(f.start)}" required></div>
+        <div class="f"><label>終了日（期間のとき）</label><input type="date" name="end" value="${esc(f.end && f.end !== f.start ? f.end : '')}"></div>
+      </div>
+      <div class="f"><label>メモ（任意）</label><input name="memo" value="${esc(f.memo)}"></div>
+      <label style="display:flex;gap:6px;align-items:center;margin-bottom:10px"><input type="checkbox" name="tentative" ${f.tentative?'checked':''}> 日付はまだ仮</label>
+      <div class="btns"><button class="btn" type="submit">${ed ? '変更を保存' : '登録する'}</button>${ed ? '<button class="btn gray" type="button" data-action="cancelEvent">やめる</button>' : ''}</div>
+      <p class="muted">「申込期間」「締切」は、終了日の30日前からホームに赤い警告が出ます。試験日は「資格の設定」で登録します。</p>
+    </form>
+  </section>
+  <section class="card"><h2>登録済みの予定（${list.length}件）</h2>
+    ${list.length ? list.map(e => `<div class="ev ${e.end < t ? 'past' : ''}"><div class="dt">${mdw(e.start)}${e.end!==e.start?`<br>〜${mdw(e.end)}`:''}<br><span class="muted">${pd(e.start).getFullYear()}年</span></div>
+      <div class="bd"><span class="dot" style="background:${qualColor(e.qualId)}"></span>${esc(qualName(e.qualId))}<br><b>${esc(e.type)}：${esc(e.title)}</b>${e.tentative?'<span class="tag kari">仮</span>':''}${e.memo?`<br><span class="muted">${esc(e.memo)}</span>`:''}
+      <div class="acts" style="margin-top:4px"><button class="btn sm gray" data-action="editEvent" data-id="${e.id}">編集</button> <button class="btn sm red" data-action="delEvent" data-id="${e.id}">削除</button></div></div></div>`).join('')
+      : '<p class="empty">予定はまだありません。</p>'}
+  </section></div>`;
+}
+function viewQuals(){
+  const ed = UI.editQualId === 'new' ? {id:'', name:'', color:'#3a8fb7', studyStart:todayStr(), examDate:addDays(todayStr(), 90), tentative:true, targetHours:50, passed:false, note:'', subjects:[]}
+    : (UI.editQualId ? qual(UI.editQualId) : null);
+  let h = '';
+  if (ed){
+    h += `<section class="card" id="qual-form-card"><h2>${ed.id ? '資格を編集' : '＋ 資格を追加'}</h2>
+      <form data-form="qual"><input type="hidden" name="id" value="${esc(ed.id)}">
+        <div class="frow">
+          <div class="f" style="grid-column:span 2"><label>資格名</label><input name="name" value="${esc(ed.name)}" required></div>
+          <div class="f"><label>表示色</label><input type="color" name="color" value="${esc(ed.color)}"></div>
+        </div>
+        <div class="frow">
+          <div class="f"><label>学習開始日</label><input type="date" name="studyStart" value="${esc(ed.studyStart)}" required></div>
+          <div class="f"><label>試験日</label><input type="date" name="examDate" value="${esc(ed.examDate)}" required></div>
+          <div class="f"><label>目標学習時間（時間）</label><input type="number" name="targetHours" min="1" value="${esc(ed.targetHours)}" required></div>
+        </div>
+        <label style="display:flex;gap:6px;align-items:center;margin-bottom:10px"><input type="checkbox" name="tentative" ${ed.tentative?'checked':''}> 試験日はまだ仮</label>
+        <div class="f"><label>科目（1行に1つ）</label><textarea name="subjects" rows="5">${esc(ed.subjects.join('\n'))}</textarea></div>
+        <div class="f"><label>メモ（合格基準など）</label><input name="note" value="${esc(ed.note)}"></div>
+        <label style="display:flex;gap:6px;align-items:center;margin-bottom:10px"><input type="checkbox" name="passed" ${ed.passed?'checked':''}> 合格済み（ホームの「今取り組んでいる資格」から外れます）</label>
+        <div class="btns"><button class="btn" type="submit">保存する</button><button class="btn gray" type="button" data-action="cancelQual">やめる</button></div>
+      </form></section>`;
+  }
+  h += `<section class="card"><div class="card-h"><h2>資格の一覧</h2>${UI.editQualId ? '' : '<button class="btn sm sub" data-action="newQual">＋ 資格を追加</button>'}</div>
+    ${S.quals.map(q => `<div class="qcard" style="border-left-color:${q.color}">
+      <div class="row-sb"><b style="font-size:15px">${esc(q.name)}${q.passed?'<span class="tag done">合格済み</span>':''}</b><button class="btn sm gray" data-action="editQual" data-id="${q.id}">編集</button></div>
+      <div class="muted">学習 ${jpw(q.studyStart)} 〜 試験 ${jpw(q.examDate)}${q.tentative?' <span class="tag kari">仮</span>':''}　／　目標 ${q.targetHours}時間</div>
+      <div class="muted">科目：${q.subjects.map(esc).join('、') || 'なし'}</div>
+      ${q.note ? `<div class="muted">メモ：${esc(q.note)}</div>` : ''}
+    </div>`).join('')}
+  </section>`;
+  return h;
+}
+
+/* ========== 問題演習・振り返り（第2段階） ========== */
+function viewQuiz(){ return `<section class="card placeholder"><div style="font-size:40px">📝</div><h2>問題演習</h2><p>この画面は第2段階で追加します。<br>（一問一答・択一問題、間違えた問題の復習、CSVでの問題追加）</p></section>`; }
+function viewReview(){ return `<section class="card placeholder"><div style="font-size:40px">📊</div><h2>振り返り</h2><p>この画面は第2段階で追加します。<br>（週・月ごとのグラフ、科目別の正答率、乙4の科目別60%ライン）</p></section>`; }
+
+/* ========== 設定・バックアップ ========== */
+function viewSettings(){
+  const st = S.settings;
+  return `<div class="grid">
+  <section class="card"><h2>学習目標</h2>
+    <form data-form="settings">
+      <div class="frow">
+        <div class="f"><label>平日の目標（分）</label><input type="number" name="weekdayMin" min="0" value="${st.weekdayMin}" required></div>
+        <div class="f"><label>休日（土日）の目標（分）</label><input type="number" name="holidayMin" min="0" value="${st.holidayMin}" required></div>
+        <div class="f"><label>1週間の目標（時間）</label><input type="number" name="weeklyTargetH" min="0" step="0.5" value="${st.weeklyTargetMin/60}" required></div>
+      </div>
+      <button class="btn" type="submit">保存する</button>
+      <p class="muted">※祝日は平日として数えます。</p>
+    </form>
+  </section>
+  <section class="card"><h2>💾 バックアップと復元</h2>
+    <p style="margin-top:0">データは<b>このパソコンのこのブラウザの中だけ</b>に保存されています。ブラウザの履歴削除などで消えることがあるので、ときどきバックアップを取ってください。</p>
+    <p class="muted">前回のバックアップ：${st.lastBackup ? jpw(st.lastBackup) : 'まだありません'}</p>
+    <div class="btns"><button class="btn" data-action="backup">バックアップを保存（JSONファイル）</button></div>
+    <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+    <div class="lbl">バックアップから復元する</div>
+    <p class="muted" style="margin-top:2px">⚠ 復元すると、<b>今ある記録・予定・設定はすべてバックアップの内容に置きかわります。</b></p>
+    <input type="file" id="restore-file">
+  </section></div>`;
+}
+async function doBackup(){
+  const name = `資格学習_バックアップ_${todayStr().replace(/-/g,'')}.json`;
+  const json = JSON.stringify(Object.assign({}, S, {settings:Object.assign({}, S.settings, {lastBackup:todayStr()})}), null, 2);
+  // iPhoneなどでは共有メニュー（「ファイルに保存」「AirDrop」など）から保存する
+  const file = typeof File === 'function' ? new File([json], name, {type:'application/json'}) : null;
+  if (file && navigator.canShare && navigator.canShare({files:[file]})){
+    try { await navigator.share({files:[file], title:name}); }
+    catch(e){ if (e.name === 'AbortError'){ toast('バックアップを取りやめました'); return; } }
+    S.settings.lastBackup = todayStr(); save(); render();
+    toast('バックアップを保存しました'); return;
+  }
+  S.settings.lastBackup = todayStr();
+  save();
+  const blob = new Blob([json], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('バックアップファイルを保存しました');
+  render();
+}
+function doRestore(file){
+  const r = new FileReader();
+  r.onload = () => {
+    let d;
+    try { d = JSON.parse(r.result); } catch(e){ alert('ファイルを読み込めませんでした。このアプリで保存したバックアップファイルを選んでください。'); return; }
+    if (!d || !Array.isArray(d.quals) || !Array.isArray(d.logs)){ alert('このアプリのバックアップファイルではないようです。'); return; }
+    const msg = `次のバックアップで、今のデータを置きかえます。\n\n・学習記録 ${d.logs.length}件\n・予定 ${(d.events||[]).length}件\n・学習項目 ${(d.topics||[]).length}件\n\n今のデータ（学習記録 ${S.logs.length}件など）は消えます。よろしいですか？`;
+    if (!confirm(msg)) return;
+    S = normalize(d); save(); UI.tab = 'home'; render(); toast('復元しました');
+  };
+  r.readAsText(file);
+}
+
+/* ========== 操作 ========== */
+function moveTopic(tp, to){
+  const mon = addDays(mondayOf(todayStr()), to === 'next' ? 7 : 0);
+  tp.start = mon; tp.end = addDays(mon, 6); tp.moved = true;
+}
+const actions = {
+  tab(el){ UI.tab = el.dataset.tab; window.scrollTo(0, 0); render(); },
+  schedSub(el){ UI.schedSub = el.dataset.sub; render(); },
+  gotoTopics(){ UI.tab = 'schedule'; UI.schedSub = 'topics'; render(); },
+  backup(){ doBackup(); },
+  quickTimer(){
+    const q = currentQual(), tm = S.timer;
+    const nxt = S.topics.filter(x => !x.done && x.start <= todayStr() && (!q || x.qualId === q.id)).sort(sortTopics)[0];
+    if (!tm.running){
+      if (tm.accMs === 0){ tm.qualId = q ? q.id : tm.qualId; tm.subject = nxt ? nxt.subject : tm.subject; }
+      tm.running = true; tm.startedAt = Date.now();
+    }
+    save(); UI.tab = 'record'; render(); toast('タイマーを開始しました');
+  },
+  timerStart(){ const tm = S.timer; if (!tm.running){ tm.running = true; tm.startedAt = Date.now(); save(); render(); } },
+  timerPause(){ const tm = S.timer; tm.accMs = timerElapsed(); tm.running = false; tm.startedAt = 0; save(); render(); },
+  timerStop(){
+    const tm = S.timer, ms = timerElapsed();
+    const minutes = Math.max(1, Math.round(ms / 60000));
+    UI.editLogId = '';
+    UI.logDraft = {date:todayStr(), qualId:tm.qualId, subject:tm.subject, minutes, memo:''};
+    Object.assign(tm, {running:false, startedAt:0, accMs:0});
+    save(); render();
+    const c = $('#log-form-card'); if (c) c.scrollIntoView({behavior:'smooth', block:'start'});
+    toast(`${minutes}分を入力しました。「記録する」を押してください`);
+  },
+  timerReset(){ if (timerElapsed() >= 60000 && !confirm('計った時間を記録せずにリセットします。よろしいですか？')) return; Object.assign(S.timer, {running:false, startedAt:0, accMs:0}); save(); render(); },
+  editLog(el){ UI.editLogId = el.dataset.id; UI.logDraft = null; render(); $('#log-form-card').scrollIntoView({behavior:'smooth', block:'start'}); },
+  cancelLog(){ UI.editLogId = ''; UI.logDraft = null; render(); },
+  delLog(el){
+    const l = S.logs.find(x => x.id === el.dataset.id); if (!l) return;
+    if (!confirm(`${jpw(l.date)}　${qualName(l.qualId)}　${l.minutes}分\nこの記録を削除します。よろしいですか？`)) return;
+    S.logs = S.logs.filter(x => x !== l); if (UI.editLogId === l.id) UI.editLogId = '';
+    save(); render(); toast('削除しました');
+  },
+  moreLogs(){ UI.logLimit += 50; render(); },
+  moveTopic(el){
+    const tp = S.topics.find(x => x.id === el.dataset.id); if (!tp) return;
+    moveTopic(tp, el.dataset.to); save(); render();
+    toast(`「${tp.text}」を ${md(tp.start)}〜${md(tp.end)} に振り替えました`);
+  },
+  moveAllLate(el){
+    const late = S.topics.filter(x => topicStatus(x) === 'late');
+    late.forEach(tp => moveTopic(tp, el.dataset.to)); save(); render();
+    toast(`${late.length}件を${el.dataset.to === 'next' ? '来週' : '今週'}に振り替えました`);
+  },
+  editTopic(el){ UI.editTopicId = el.dataset.id; render(); },
+  cancelTopic(){ UI.editTopicId = ''; render(); },
+  delTopic(el){
+    const tp = S.topics.find(x => x.id === el.dataset.id); if (!tp) return;
+    if (!confirm(`「${tp.text}」を学習項目から削除します。よろしいですか？`)) return;
+    S.topics = S.topics.filter(x => x !== tp); save(); render(); toast('削除しました');
+  },
+  editEvent(el){ UI.editEventId = el.dataset.id; render(); $('#event-form-card').scrollIntoView({behavior:'smooth', block:'start'}); },
+  cancelEvent(){ UI.editEventId = ''; render(); },
+  delEvent(el){
+    const e = S.events.find(x => x.id === el.dataset.id); if (!e) return;
+    if (!confirm(`「${e.type}：${e.title}」（${jpw(e.start)}）を削除します。よろしいですか？`)) return;
+    S.events = S.events.filter(x => x !== e); if (UI.editEventId === e.id) UI.editEventId = '';
+    save(); render(); toast('削除しました');
+  },
+  newQual(){ UI.editQualId = 'new'; render(); },
+  bokiReplan(){
+    if (!confirm('簿記3級の計画を、試験日 2027/1/10 に合わせて詰め直します。\n\n・試験日を 2027/1/10 にします\n・学習項目を 11/2〜1/9 の10週に組み直します（完了のチェックはそのまま残ります。振り替えた日付は新しい予定に戻ります）\n・「CBT受験日の予約」の締切を 12/13 にします\n・「CBT受験（1/25〜1/31）」の予定を削除します\n\nよろしいですか？')) return;
+    bokiReplan(); save(); render(); toast('簿記3級の計画を詰め直しました');
+  },
+  editExam(el){ UI.tab = 'schedule'; UI.schedSub = 'quals'; UI.editQualId = el.dataset.id; render(); window.scrollTo(0, 0); },
+  editQual(el){ UI.editQualId = el.dataset.id; render(); window.scrollTo(0, 0); },
+  cancelQual(){ UI.editQualId = ''; render(); },
+};
+const changes = {
+  setCurrent(el){ S.settings.currentQualId = el.value; save(); render(); },
+  timerQual(el){ S.timer.qualId = el.value; S.timer.subject = ''; save(); render(); },
+  timerSubject(el){ S.timer.subject = el.value.trim(); save(); },
+  logQual(){ syncSubjectList(); },
+  logFilter(el){ UI.logFilter = el.value; UI.logLimit = 30; render(); },
+  topicStart(el){
+    const f = el.form; if (!el.value) return;
+    f.week.value = weekOf(f.qualId.value, el.value);
+    if (!f.end.value || f.end.value < el.value) f.end.value = addDays(el.value, 6);
+  },
+  topicQual(el){ UI.topicQual = el.value; UI.editTopicId = ''; render(); },
+  toggleTopic(el){
+    const tp = S.topics.find(x => x.id === el.dataset.id); if (!tp) return;
+    tp.done = el.checked; tp.doneDate = el.checked ? todayStr() : '';
+    save(); render(); if (el.checked) toast('おつかれさまです！完了にしました');
+  },
+};
+const forms = {
+  log(f, d){
+    const minutes = parseInt(d.minutes, 10);
+    if (!d.date || !(minutes > 0)){ alert('日付と時間（1分以上）を入力してください。'); return; }
+    const rec = {date:d.date, qualId:d.qualId, subject:d.subject.trim(), minutes, memo:d.memo.trim()};
+    if (UI.editLogId){ Object.assign(S.logs.find(l => l.id === UI.editLogId), rec); toast('変更を保存しました'); }
+    else { S.logs.push(Object.assign({id:uid(), created:Date.now()}, rec)); toast(`${fmtMin(minutes)}を記録しました`); }
+    UI.editLogId = ''; UI.logDraft = null; save(); render();
+  },
+  topic(f, d){
+    if (d.end < d.start){ alert('終了日は開始日より後にしてください。'); return; }
+    const vals = {week:parseInt(d.week, 10) || 1, planStart:d.start, planEnd:d.end, start:d.start, end:d.end, text:d.text.trim(), subject:d.subject.trim(), moved:false};
+    if (d.id){ Object.assign(S.topics.find(x => x.id === d.id), vals); toast('変更を保存しました'); }
+    else {
+      const order = S.topics.filter(x => x.qualId === d.qualId && x.week === vals.week).length;
+      S.topics.push(Object.assign({id:uid(), qualId:d.qualId, order, done:false, doneDate:''}, vals)); toast('追加しました');
+    }
+    UI.editTopicId = ''; save(); render();
+  },
+  bulkTopics(f, d){
+    const lines = d.lines.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const add = [], bad = [];
+    lines.forEach((ln, i) => {
+      const c = ln.split(/[,，]/).map(s => s.trim());
+      const week = parseInt(c[0], 10), s = normDate(c[1]), e = normDate(c[2]);
+      if (c.length < 4 || !(week > 0) || !s || !e || e < s || !c[3]) { bad.push(i + 1); return; }
+      const subject = c.length >= 5 ? c[c.length-1] : '';
+      const text = c.slice(3, c.length >= 5 ? -1 : undefined).join('、');
+      add.push({week, s, e, text, subject});
+    });
+    if (bad.length){ alert(`${bad.join('、')}行目の書き方が正しくありません。\n「週,開始日,終了日,学習項目,科目」の順になっているか確認してください。\n（何も追加していません）`); return; }
+    if (!add.length) return;
+    add.forEach(a => {
+      const order = S.topics.filter(x => x.qualId === d.qualId && x.week === a.week).length;
+      S.topics.push({id:uid(), qualId:d.qualId, week:a.week, order, planStart:a.s, planEnd:a.e, start:a.s, end:a.e, text:a.text, subject:a.subject, done:false, doneDate:'', moved:false});
+    });
+    save(); render(); toast(`${add.length}件を追加しました`);
+  },
+  event(f, d){
+    const end = d.end || d.start;
+    if (end < d.start){ alert('終了日は開始日より後にしてください。'); return; }
+    const vals = {qualId:d.qualId, type:d.type, title:d.title.trim(), start:d.start, end, tentative:!!d.tentative, memo:d.memo.trim()};
+    if (d.id){ Object.assign(S.events.find(x => x.id === d.id), vals); toast('変更を保存しました'); }
+    else { S.events.push(Object.assign({id:uid()}, vals)); toast('登録しました'); }
+    UI.editEventId = ''; save(); render();
+  },
+  qual(f, d){
+    if (d.examDate < d.studyStart){ alert('試験日は学習開始日より後にしてください。'); return; }
+    const vals = {name:d.name.trim(), color:d.color, studyStart:d.studyStart, examDate:d.examDate, tentative:!!d.tentative,
+      targetHours:Math.max(1, parseFloat(d.targetHours) || 1), passed:!!d.passed, note:d.note.trim(),
+      subjects:d.subjects.split(/\r?\n/).map(s => s.trim()).filter(Boolean)};
+    if (d.id) Object.assign(qual(d.id), vals);
+    else S.quals.push(Object.assign({id:uid()}, vals));
+    if (vals.passed && S.settings.currentQualId === d.id) S.settings.currentQualId = '';
+    UI.editQualId = ''; save(); render(); toast('保存しました');
+    const after = d.id ? S.topics.filter(x => x.qualId === d.id && !x.done && x.end > vals.examDate) : [];
+    if (after.length) alert(`試験日（${jpw(vals.examDate)}）より後に予定されている学習項目が ${after.length} 件あります。\n「スケジュール」→「学習項目」で日付を見直してください。`);
+  },
+  settings(f, d){
+    S.settings.weekdayMin = Math.max(0, parseInt(d.weekdayMin, 10) || 0);
+    S.settings.holidayMin = Math.max(0, parseInt(d.holidayMin, 10) || 0);
+    S.settings.weeklyTargetMin = Math.round(Math.max(0, parseFloat(d.weeklyTargetH) || 0) * 60);
+    save(); render(); toast('保存しました');
+  },
+};
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]');
+  if (el && actions[el.dataset.action]){ e.preventDefault(); actions[el.dataset.action](el); }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.id === 'restore-file' && el.files[0]){ doRestore(el.files[0]); el.value = ''; return; }
+  if (el.dataset && changes[el.dataset.change]) changes[el.dataset.change](el);
+});
+document.addEventListener('submit', e => {
+  const f = e.target, h = forms[f.dataset.form];
+  if (!h) return;
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(f).entries());
+  h(f, d);
+});
+// タイマー表示を1秒ごとに更新
+setInterval(() => {
+  if (!S.timer.running) return;
+  const txt = fmtClock(timerElapsed());
+  const a = $('#timer-display'), b = $('#chip-time');
+  if (a) a.textContent = txt;
+  if (b) b.textContent = txt;
+}, 1000);
+// 日付が変わったら表示を更新（朝まで開きっぱなしの場合）
+let lastDay = todayStr();
+setInterval(() => { if (todayStr() !== lastDay){ lastDay = todayStr(); if (!document.querySelector('form:focus-within')) render(); } }, 60000);
+// 別のタブで変更されたら読み直す
+window.addEventListener('storage', e => { if (e.key === STORE_KEY){ S = load(); render(); } });
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+save();
+render();
+</script>
+</body>
+</html>
