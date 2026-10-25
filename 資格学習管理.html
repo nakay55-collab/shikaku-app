@@ -332,7 +332,6 @@ function render(){
   const views = {home:viewHome, record:viewRecord, schedule:viewSchedule, quiz:viewQuiz, review:viewReview, settings:viewSettings};
   $('#main').innerHTML = (storageOK ? '' : `<div class="alert red"><b>データを保存できません。</b><br>ブラウザの設定（Cookieとサイトデータ）で保存が禁止されている可能性があります。</div>`) + views[UI.tab]();
   renderTimerChip();
-  if (UI.tab === 'record') syncSubjectList();
 }
 function renderTimerChip(){
   const tm = S.timer, el = $('#timer-chip');
@@ -491,7 +490,7 @@ function viewRecord(){
     <h2>⏱ タイマー</h2>
     <div class="frow">
       <div class="f"><span class="lbl">資格</span><select data-change="timerQual">${qualOptions(tm.qualId)}</select></div>
-      <div class="f"><span class="lbl">科目</span><input data-change="timerSubject" list="subj-timer" value="${esc(tm.subject)}" placeholder="選ぶか入力"><datalist id="subj-timer">${((qual(tm.qualId)||{}).subjects||[]).map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
+      <div class="f"><span class="lbl">科目</span>${subjectField(tm.qualId, tm.subject, true)}</div>
     </div>
     <div class="timer ${tm.running?'run':''}" id="timer-display">${fmtClock(el)}</div>
     <div class="btns" style="justify-content:center">
@@ -511,7 +510,7 @@ function viewRecord(){
         <div class="f"><label>時間（分）</label><input type="number" name="minutes" min="1" max="1440" inputmode="numeric" value="${esc(f.minutes)}" required></div>
       </div>
       <div class="f"><label>資格</label><select name="qualId" data-change="logQual">${qualOptions(f.qualId)}</select></div>
-      <div class="f"><label>科目</label><input name="subject" list="subj-log" value="${esc(f.subject)}" placeholder="選ぶか入力"><datalist id="subj-log"></datalist></div>
+      <div class="f"><label>科目</label><div id="log-subj">${subjectField(f.qualId, f.subject)}</div></div>
       <div class="f"><label>メモ（任意）</label><textarea name="memo" placeholder="例：仕訳の練習問題 20問">${esc(f.memo)}</textarea></div>
       <div class="btns"><button class="btn" type="submit">${editing ? '変更を保存' : '記録する'}</button>
         ${editing || UI.logDraft ? `<button class="btn gray" type="button" data-action="cancelLog">やめる</button>` : ''}</div>
@@ -539,11 +538,18 @@ function viewRecord(){
   </section>`;
   return h;
 }
-function syncSubjectList(){
-  const sel = document.querySelector('form[data-form="log"] select[name="qualId"]');
-  const dl = $('#subj-log');
-  if (sel && dl) dl.innerHTML = ((qual(sel.value)||{}).subjects||[]).map(s => `<option value="${esc(s)}">`).join('');
+// 科目欄：資格の科目から選ぶ。一覧にないときは「その他」を選んで手入力
+function subjectField(qid, val, timer){
+  const subs = (qual(qid) || {}).subjects || [];
+  const other = !!val && !subs.includes(val);
+  return `<select ${timer ? 'data-timer="1"' : 'name="subjectSel"'} data-change="subjSel">
+      <option value="">（選ばない）</option>
+      ${subs.map(x => `<option ${x===val?'selected':''}>${esc(x)}</option>`).join('')}
+      <option value="__other" ${other?'selected':''}>その他（自分で入力）</option>
+    </select>
+    <input ${timer ? 'data-change="timerSubject"' : 'name="subjectOther"'} value="${other ? esc(val) : ''}" placeholder="科目名を入力" style="margin-top:6px;${other ? '' : 'display:none'}">`;
 }
+function pickSubject(d){ return d.subjectSel === '__other' ? (d.subjectOther || '').trim() : (d.subjectSel || ''); }
 
 /* ========== スケジュール ========== */
 function viewSchedule(){
@@ -642,7 +648,6 @@ function viewTopics(){
   return h;
 }
 function topicForm(x){
-  const subs = (qual(x.qualId) || {}).subjects || [];
   return `<form data-form="topic" class="wk" style="background:#fafbfd">
     <input type="hidden" name="id" value="${esc(x.id||'')}"><input type="hidden" name="qualId" value="${esc(x.qualId)}">
     <div class="frow">
@@ -651,7 +656,7 @@ function topicForm(x){
       <div class="f"><label>終了日</label><input type="date" name="end" value="${esc(x.planEnd)}" required></div>
     </div>
     <div class="f"><label>学習項目</label><input name="text" value="${esc(x.text)}" required></div>
-    <div class="f"><label>科目（任意）</label><input name="subject" list="subj-topic-${esc(x.qualId)}" value="${esc(x.subject)}"><datalist id="subj-topic-${esc(x.qualId)}">${subs.map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
+    <div class="f"><label>科目（任意）</label>${subjectField(x.qualId, x.subject)}</div>
     <div class="btns"><button class="btn" type="submit">${x.id ? '変更を保存' : '追加する'}</button>${x.id ? `<button class="btn gray" type="button" data-action="cancelTopic">やめる</button>` : ''}</div>
     ${x.id && x.moved ? '<p class="muted" style="margin-bottom:0">※保存すると、振り替えた日付はここで入力した日付に置きかわります。</p>' : ''}
   </form>`;
@@ -864,7 +869,13 @@ const changes = {
   setCurrent(el){ S.settings.currentQualId = el.value; save(); render(); },
   timerQual(el){ S.timer.qualId = el.value; S.timer.subject = ''; save(); render(); },
   timerSubject(el){ S.timer.subject = el.value.trim(); save(); },
-  logQual(){ syncSubjectList(); },
+  logQual(el){ $('#log-subj').innerHTML = subjectField(el.value, ''); },
+  subjSel(el){
+    const other = el.nextElementSibling;
+    other.style.display = el.value === '__other' ? '' : 'none';
+    if (el.value === '__other') other.focus();
+    if (el.dataset.timer){ S.timer.subject = el.value === '__other' ? other.value.trim() : el.value; save(); }
+  },
   logFilter(el){ UI.logFilter = el.value; UI.logLimit = 30; render(); },
   topicStart(el){
     const f = el.form; if (!el.value) return;
@@ -882,14 +893,14 @@ const forms = {
   log(f, d){
     const minutes = parseInt(d.minutes, 10);
     if (!d.date || !(minutes > 0)){ alert('日付と時間（1分以上）を入力してください。'); return; }
-    const rec = {date:d.date, qualId:d.qualId, subject:d.subject.trim(), minutes, memo:d.memo.trim()};
+    const rec = {date:d.date, qualId:d.qualId, subject:pickSubject(d), minutes, memo:d.memo.trim()};
     if (UI.editLogId){ Object.assign(S.logs.find(l => l.id === UI.editLogId), rec); toast('変更を保存しました'); }
     else { S.logs.push(Object.assign({id:uid(), created:Date.now()}, rec)); toast(`${fmtMin(minutes)}を記録しました`); }
     UI.editLogId = ''; UI.logDraft = null; save(); render();
   },
   topic(f, d){
     if (d.end < d.start){ alert('終了日は開始日より後にしてください。'); return; }
-    const vals = {week:parseInt(d.week, 10) || 1, planStart:d.start, planEnd:d.end, start:d.start, end:d.end, text:d.text.trim(), subject:d.subject.trim(), moved:false};
+    const vals = {week:parseInt(d.week, 10) || 1, planStart:d.start, planEnd:d.end, start:d.start, end:d.end, text:d.text.trim(), subject:pickSubject(d), moved:false};
     if (d.id){ Object.assign(S.topics.find(x => x.id === d.id), vals); toast('変更を保存しました'); }
     else {
       const order = S.topics.filter(x => x.qualId === d.qualId && x.week === vals.week).length;

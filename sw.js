@@ -1,6 +1,6 @@
 // 電波がなくてもアプリを開けるように、画面の部品を携帯に保存しておく仕組み。
 // アプリを更新したときは CACHE の番号を1つ上げる。
-const CACHE = 'shikaku-v1';
+const CACHE = 'shikaku-v2';
 const FILES = ['./', './index.html', './資格学習管理.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
